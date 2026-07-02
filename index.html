@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Life Sync Master Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e3a8a; } /* blue-900 */
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; } /* blue-500 */
+    </style>
+</head>
+<body class="bg-blue-950 text-blue-100 font-sans min-h-screen pb-24 md:pb-6">
+
+    <header class="bg-blue-900 border-b border-blue-800 shadow-lg sticky top-0 z-40 px-4 py-3 mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-600/20 text-blue-400 rounded-xl border border-blue-600/30">
+                    <i data-lucide="zap" class="w-6 h-6 animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight text-white flex items-center gap-1.5">LIFE SYNC <span class="text-blue-400">PRO</span></h1>
+                    <p class="text-[11px] text-blue-300">High-Contrast Blue Matrix</p>
+                </div>
+            </div>
+
+            <div id="authHeaderZone" class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                <div id="loggedOutStateView" class="flex items-center gap-2 w-full sm:w-auto">
+                    <button onclick="toggleAuthModal()" class="w-full sm:w-auto bg-blue-950 hover:bg-blue-800 border border-blue-800 px-3 py-2 rounded-xl text-xs font-bold text-blue-300 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <i data-lucide="cloud-off" class="w-4 h-4"></i> Sync Account
+                    </button>
+                </div>
+
+                <div id="loggedInStateView" class="hidden flex items-center gap-3 bg-blue-950/80 pl-3 pr-2 py-1.5 rounded-xl border border-blue-800">
+                    <img id="userDisplayAvatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=fallback" class="w-7 h-7 rounded-full bg-blue-900 border-2 border-blue-400 object-cover" alt="Avatar">
+                    <div class="text-right hidden xs:block">
+                        <p id="userDisplayEmail" class="text-xs font-bold text-blue-100">...</p>
+                        <p class="text-[9px] text-blue-400 font-mono flex items-center justify-end gap-0.5"><span class="w-1 h-1 rounded-full bg-blue-400 animate-ping"></span> Synced</p>
+                    </div>
+                    <button id="logoutBtn" class="bg-blue-900 hover:bg-blue-600 text-blue-300 hover:text-white p-2 rounded-lg border border-blue-800 transition-colors cursor-pointer" title="Disconnect">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="authCloudModal" class="hidden max-w-md mx-auto mt-4 bg-blue-950 border border-blue-800 rounded-2xl shadow-2xl overflow-hidden transition-all">
+            <div class="p-5 space-y-4">
+                <div class="text-center">
+                    <h3 class="font-bold text-sm text-blue-100">Access Tracks</h3>
+                    <p class="text-[11px] text-blue-300 mt-0.5">Log in to sync parameters.</p>
+                </div>
+                <button id="googleLoginBtn" class="w-full bg-blue-100 hover:bg-white text-blue-950 font-black py-2.5 px-4 rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer">
+                    Continue with Google
+                </button>
+                <div class="space-y-2 text-xs border-t border-blue-800 pt-3">
+                    <input type="email" id="authEmailInput" placeholder="Enter Email" class="w-full bg-blue-900 border border-blue-800 rounded-xl p-2.5 text-blue-100 focus:outline-none focus:border-blue-400">
+                    <input type="password" id="authPasswordInput" placeholder="Password" class="w-full bg-blue-900 border border-blue-800 rounded-xl p-2.5 text-blue-100 focus:outline-none focus:border-blue-400">
+                    <div class="grid grid-cols-2 gap-2 pt-1">
+                        <button id="emailSignInBtn" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl transition-all cursor-pointer">Sign In</button>
+                        <button id="emailSignUpBtn" class="bg-blue-900 hover:bg-blue-800 text-blue-300 border border-blue-800 font-bold py-2 rounded-xl transition-all cursor-pointer">Register</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <div class="lg:col-span-1 space-y-6">
+            
+            <div id="profileCustomizationCard" class="hidden bg-blue-900 p-5 rounded-2xl border border-blue-800 shadow-xl space-y-3">
+                <h2 class="font-bold text-sm flex items-center gap-2 text-blue-300"><i data-lucide="user-cog"></i> Profile Settings</h2>
+                <div class="space-y-2 text-xs">
+                    <div>
+                        <label class="block text-blue-300 mb-0.5">Display Name</label>
+                        <input type="text" id="profileNameInput" placeholder="Username" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2 text-blue-100 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-blue-300 mb-0.5">Upload Profile Picture</label>
+                        <input type="file" id="profileFileInput" accept="image/*" class="w-full text-blue-300 file:mr-4 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-2 bg-blue-950 rounded-xl border border-blue-800 mt-1">
+                        <span class="text-blue-300 font-bold">Timeline Privacy</span>
+                        <select id="profilePrivacySelect" class="bg-blue-900 border border-blue-800 rounded-lg p-1 text-blue-400 font-bold focus:outline-none focus:border-blue-500">
+                            <option value="public">🌐 Public Line</option>
+                            <option value="private">🔒 Private (Hide)</option>
+                        </select>
+                    </div>
+
+                    <button onclick="updateUserProfileData()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl transition-all text-xs cursor-pointer">Save Changes</button>
+                </div>
+            </div>
+
+            <div class="bg-blue-900 p-6 rounded-2xl border border-blue-800 shadow-xl space-y-4">
+                <h2 class="font-bold text-lg flex items-center gap-2 text-blue-300"><i data-lucide="plus-circle"></i> Create Event</h2>
+                
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block text-blue-300 mb-1">Event Name</label>
+                        <input type="text" id="eventTitle" placeholder="e.g., Programming" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2.5 text-blue-100 focus:outline-none focus:border-blue-500">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-blue-300 mb-1">Start Date</label>
+                            <input type="date" id="startDate" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2.5 text-blue-100">
+                        </div>
+                        <div>
+                            <label class="block text-blue-300 mb-1">End Date</label>
+                            <input type="date" id="endDate" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2.5 text-blue-100">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-blue-300 mb-1">Total Metric Target</label>
+                            <input type="number" id="metricTotal" value="10" min="1" oninput="verifySchedulerFormBounds()" class="w-full bg-blue-950 border border-blue-800 rounded-lg p-1.5 text-center font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-blue-300 mb-1">Starting Progress</label>
+                            <input type="number" id="metricCurrent" value="0" min="0" oninput="verifySchedulerFormBounds()" class="w-full bg-blue-950 border border-blue-800 rounded-lg p-1.5 text-center font-bold">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-blue-300 mb-1">Category Classification</label>
+                        <select id="eventCategory" onchange="toggleCustomCategoryField()" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2.5 text-blue-100">
+                            <option value="Project">Project</option>
+                            <option value="Studies">Studies</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+
+                    <div id="customCategoryDiv" class="hidden">
+                        <label class="block text-blue-300 mb-1">Custom Category Name</label>
+                        <input type="text" id="customCategoryName" placeholder="Enter Category Name" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2.5 text-blue-100">
+                    </div>
+
+                    <button onclick="addCustomEvent()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg mt-2 flex items-center justify-center gap-2 cursor-pointer">
+                        <i data-lucide="calendar-plus" class="w-4 h-4"></i> Schedule Track
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-blue-900 p-5 rounded-2xl border border-blue-800 shadow-xl space-y-4">
+                <h2 class="font-bold text-base flex items-center gap-2 text-blue-300"><i data-lucide="users"></i> Social Sync</h2>
+                <div class="space-y-2 text-xs">
+                    <div class="flex gap-2">
+                        <input type="email" id="friendEmailSearch" placeholder="Friend's Email" class="w-full bg-blue-950 border border-blue-800 rounded-xl p-2 text-blue-100 focus:outline-none focus:border-blue-500">
+                        <button onclick="searchAndAddFriend()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-3 rounded-xl transition-all cursor-pointer">Connect</button>
+                    </div>
+                </div>
+                <div id="friendsListContainer" class="space-y-2 max-h-56 overflow-y-auto custom-scrollbar pt-1">
+                    <p class="text-blue-400 text-center text-xs italic py-2">No connected accounts yet.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-6">
+            
+            <div id="dayInspectionPanel" class="hidden bg-blue-900 border-2 border-blue-400 p-4 rounded-2xl shadow-2xl space-y-3">
+                <div class="flex justify-between items-center border-b border-blue-800 pb-1.5">
+                    <h3 id="dayInspectionTitle" class="font-black text-sm text-blue-300 flex items-center gap-1.5"></h3>
+                    <button onclick="closeDayInspector()" class="text-blue-400 hover:text-white text-xs font-bold bg-blue-950 px-2 py-0.5 rounded-lg border border-blue-800">Close</button>
+                </div>
+                <div id="dayInspectionContent" class="text-xs space-y-2 max-h-40 overflow-y-auto custom-scrollbar"></div>
+            </div>
+
+            <div class="bg-blue-900 p-6 rounded-2xl border border-blue-800 shadow-xl">
+                <div class="flex justify-between items-center border-b border-blue-800 pb-3 mb-4">
+                    <div>
+                        <h2 class="font-bold text-lg flex items-center gap-2 text-blue-300"><i data-lucide="calendar-days"></i> Public Calendar View</h2>
+                    </div>
+                    <div class="flex items-center gap-2 text-xs">
+                        <button onclick="adjustMonth(-1)" class="p-1 bg-blue-950 border border-blue-800 rounded-lg text-blue-400 hover:text-white"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <span id="calendarMonthTitle" class="font-bold text-blue-100 min-w-[100px] text-center">July 2026</span>
+                        <button onclick="adjustMonth(1)" class="p-1 bg-blue-950 border border-blue-800 rounded-lg text-blue-400 hover:text-white"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-blue-400 uppercase tracking-wider mb-1">
+                    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                </div>
+                <div id="calendarDaysGrid" class="grid grid-cols-7 gap-1"></div>
+            </div>
+
+            <div id="workspaceTimelinesContainer" class="grid grid-cols-1 gap-6">
+                <div class="bg-blue-900 p-6 rounded-2xl border border-blue-800 shadow-xl flex flex-col max-h-[450px] overflow-hidden">
+                    <div class="border-b border-blue-800 pb-3 mb-4">
+                        <h2 class="font-bold text-base flex items-center gap-2 text-blue-300"><i data-lucide="layers"></i> Active Master Timeline</h2>
+                    </div>
+                    <div id="masterTimelineContainer" class="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar"></div>
+                </div>
+
+                <div id="friendSharedPlanPanel" class="hidden bg-blue-900 p-6 rounded-2xl border-2 border-blue-500 shadow-xl flex flex-col max-h-[450px] overflow-hidden">
+                    <div class="border-b border-blue-800 pb-3 mb-4 flex justify-between items-center">
+                        <h2 id="friendSharedPlanTitle" class="font-bold text-base flex items-center gap-2 text-blue-300"></h2>
+                        <button onclick="closeFriendTimelineView()" class="text-blue-400 hover:text-white text-xs">Hide Track</button>
+                    </div>
+                    <div id="friendSharedTimelineContainer" class="flex-1 overflow-y-auto pr-1 space-y-4 custom-scrollbar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dmChatInterfaceWindow" class="hidden fixed inset-0 sm:inset-auto sm:bottom-4 sm:right-4 z-[60] bg-blue-950 sm:border border-blue-800 sm:rounded-2xl shadow-2xl flex flex-col w-full sm:w-96 h-[100dvh] sm:h-96">
+        <div class="bg-blue-900 p-3 flex justify-between items-center border-b border-blue-800">
+            <div class="flex items-center gap-2 min-w-0">
+                <h4 id="dmChatRecipientName" class="font-black text-xs text-blue-300 truncate uppercase"></h4>
+            </div>
+            <button onclick="closeDMChatWindow()" class="text-blue-400 hover:text-white cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+        </div>
+        <div id="dmChatMessagesContainer" class="flex-1 p-3 overflow-y-auto space-y-4 text-xs custom-scrollbar bg-blue-950/40"></div>
+        <div class="p-3 bg-blue-900 border-t border-blue-800 flex gap-2">
+            <input type="text" id="dmMessageInputField" placeholder="Type a message..." class="flex-1 bg-blue-950 border border-blue-800 rounded-xl px-3 py-3 sm:py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+            <button onclick="sendDirectChatMessage()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-4 py-3 sm:py-2 rounded-xl text-xs transition-all">Send</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection, query, where, getDocs, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAHL4gtUEzDIELc1iVa2bEQNoMKFzeq6go",
+            authDomain: "life-sync-998cc.firebaseapp.com",
+            projectId: "life-sync-998cc",
+            storageBucket: "life-sync-998cc.firebasestorage.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let unsubscribeCloudListener = null;
+        let unsubscribeDMListener = null;
+
+        window.authInstance = auth; window.dbInstance = db; window.googleProvider = provider;
+        window.signInWithPopup = signInWithPopup; window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword; window.signOut = signOut;
+        window.setDoc = setDoc; window.doc = doc; window.getDoc = getDoc; window.getDocs = getDocs;
+        window.collection = collection; window.query = query; window.where = where;
+        window.updateDoc = updateDoc; window.arrayUnion = arrayUnion;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                document.getElementById('loggedOutStateView').classList.add('hidden');
+                document.getElementById('loggedInStateView').classList.remove('hidden');
+                document.getElementById('profileCustomizationCard').classList.remove('hidden');
+                document.getElementById('userDisplayEmail').innerText = user.email;
+
+                unsubscribeCloudListener = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        window.appEvents = data.appEvents || [];
+                        window.friendsList = data.friendsList || [];
+                        window.userPrivacySetting = data.privacySetting || "public";
+                        
+                        document.getElementById('profileNameInput').value = data.displayName || "";
+                        document.getElementById('profilePrivacySelect').value = window.userPrivacySetting;
+                        
+                        if (data.displayAvatar) {
+                            document.getElementById('userDisplayAvatar').src = data.displayAvatar;
+                        }
+                    } else {
+                        setDoc(doc(db, "users", user.uid), {
+                            email: user.email, appEvents: [], friendsList: [], privacySetting: "public",
+                            displayName: user.displayName || user.email.split('@')[0],
+                            displayAvatar: user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.email}`
+                        });
+                    }
+                    window.renderMasterSuite();
+                });
+            } else {
+                if (unsubscribeCloudListener) unsubscribeCloudListener();
+                if (unsubscribeDMListener) unsubscribeDMListener();
+                document.getElementById('loggedInStateView').classList.add('hidden');
+                document.getElementById('loggedOutStateView').classList.remove('hidden');
+                document.getElementById('profileCustomizationCard').classList.add('hidden');
+                window.appEvents = []; window.friendsList = [];
+                window.pairedFriendEvents = null; window.pairedFriendId = null;
+                window.renderMasterSuite();
+            }
+        });
+
+        // AVATARS OVER CHAT BUBBLES IMPLEMENTATION
+        window.activateRealtimeChatChannel = function(roomId) {
+            if(unsubscribeDMListener) unsubscribeDMListener();
+            unsubscribeDMListener = onSnapshot(doc(db, "chats", roomId), (chatSnap) => {
+                const container = document.getElementById('dmChatMessagesContainer');
+                container.innerHTML = '';
+                if(chatSnap.exists()){
+                    const data = chatSnap.data();
+                    const messages = data.messages || [];
+                    messages.forEach(m => {
+                        const isMe = m.senderUid === auth.currentUser.uid;
+                        const avatarImg = m.senderAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.senderName}`;
+                        
+                        // Avatars strictly rendered on top of the text bubbles
+                        if(isMe) {
+                            container.innerHTML += `
+                                <div class="ml-auto flex flex-col items-end max-w-[85%]">
+                                    <div class="flex items-center gap-1.5 mb-1 mr-1">
+                                        <span class="font-black text-[10px] text-blue-300">${m.senderName}</span>
+                                        <img src="${avatarImg}" class="w-5 h-5 rounded-full border border-blue-400 object-cover">
+                                    </div>
+                                    <div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-sm text-xs shadow-md">
+                                        <p>${m.text}</p>
+                                    </div>
+                                </div>`;
+                        } else {
+                            container.innerHTML += `
+                                <div class="mr-auto flex flex-col items-start max-w-[85%]">
+                                    <div class="flex items-center gap-1.5 mb-1 ml-1">
+                                        <img src="${avatarImg}" class="w-5 h-5 rounded-full border border-blue-400 object-cover">
+                                        <span class="font-black text-[10px] text-blue-400">${m.senderName}</span>
+                                    </div>
+                                    <div class="bg-blue-800 border border-blue-700 text-blue-100 p-3 rounded-2xl rounded-tl-sm text-xs shadow-md">
+                                        <p>${m.text}</p>
+                                    </div>
+                                </div>`;
+                        }
+                    });
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    container.innerHTML = `<p class="text-blue-400 text-center text-xs italic py-10">Say hello!</p>`;
+                }
+            });
+        };
+    </script>
+
+    <script>
+        window.appEvents = []; window.friendsList = [];
+        window.pairedFriendEvents = null; window.pairedFriendId = null; window.pairedFriendAvatar = null; window.userPrivacySetting = "public";
+        let stagingChanges = {}; let currentCalendarDate = new Date(); let openChatRoomId = null;
+
+        function verifySchedulerFormBounds() {
+            const totalInput = document.getElementById('metricTotal');
+            const currentInput = document.getElementById('metricCurrent');
+            let totalValue = parseFloat(totalInput.value);
+            if (isNaN(totalValue) || totalValue < 1) totalValue = 1; totalInput.value = totalValue;
+            let currentValue = parseFloat(currentInput.value);
+            if (isNaN(currentValue) || currentValue < 0) currentValue = 0; currentInput.value = currentValue;
+            if (currentValue > totalValue) currentInput.value = totalValue;
+        }
+
+        function verifyTrackUpdateBounds(id, value, maxAllowed) {
+            let parsed = parseFloat(value);
+            const confirmationPanel = document.getElementById(`controls-confirm-${id}`);
+            const defaultPanel = document.getElementById(`controls-default-${id}`);
+            const inputField = document.getElementById(`input-metric-${id}`);
+            if (isNaN(parsed) || parsed < 0) parsed = 0; inputField.value = parsed;
+            if (parsed > maxAllowed) parsed = maxAllowed; inputField.value = parsed;
+            stagingChanges[id] = parsed;
+            defaultPanel.classList.add('hidden');
+            confirmationPanel.classList.remove('hidden');
+        }
+
+        async function pushCloudData() {
+            if (window.authInstance && window.authInstance.currentUser) {
+                const uid = window.authInstance.currentUser.uid;
+                const userDocRef = window.doc(window.dbInstance, "users", uid);
+                const docSnap = await window.getDoc(userDocRef);
+                let currentData = docSnap.exists() ? docSnap.data() : {};
+                await window.setDoc(userDocRef, { ...currentData, appEvents: window.appEvents, friendsList: window.friendsList, privacySetting: window.userPrivacySetting });
+            }
+        }
+
+        async function updateUserProfileData() {
+            if (!window.authInstance.currentUser) return;
+            const name = document.getElementById('profileNameInput').value.trim();
+            const fileInput = document.getElementById('profileFileInput');
+            const privacySetting = document.getElementById('profilePrivacySelect').value;
+            const uid = window.authInstance.currentUser.uid;
+            
+            const userDocRef = window.doc(window.dbInstance, "users", uid);
+            const docSnap = await window.getDoc(userDocRef);
+            let currentData = docSnap.exists() ? docSnap.data() : {};
+            let finalAvatarBase64 = currentData.displayAvatar || "";
+
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 800000) { alert("File size limit exceeded. Max 800KB."); return; }
+                finalAvatarBase64 = await convertImageFileToBase64(file);
+            }
+            window.userPrivacySetting = privacySetting;
+            await window.setDoc(userDocRef, { ...currentData, displayName: name, displayAvatar: finalAvatarBase64, privacySetting: privacySetting });
+            alert("Settings updated successfully!");
+        }
+
+        function convertImageFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function searchAndAddFriend() {
+            if (!window.authInstance.currentUser) return;
+            const targetEmail = document.getElementById('friendEmailSearch').value.trim().toLowerCase();
+            if (!targetEmail) return;
+
+            const q = window.query(window.collection(window.dbInstance, "users"), window.where("email", "==", targetEmail));
+            const querySnapshot = await window.getDocs(q);
+            if (querySnapshot.empty) { alert("User not found."); return; }
+
+            let targetUid = null;
+            querySnapshot.forEach((doc) => { targetUid = doc.id; });
+            if (window.friendsList.some(f => f.uid === targetUid)) { alert("Already connected."); return; }
+
+            window.friendsList.push({ uid: targetUid, email: targetEmail });
+            await pushCloudData();
+            document.getElementById('friendEmailSearch').value = '';
+        }
+
+        function openDirectChatWindow(friendUid, friendName) {
+            const myUid = window.authInstance.currentUser.uid;
+            openChatRoomId = myUid < friendUid ? `${myUid}_${friendUid}` : `${friendUid}_${myUid}`;
+            document.getElementById('dmChatRecipientName').innerText = `Chat with ${friendName}`;
+            document.getElementById('dmChatInterfaceWindow').classList.remove('hidden');
+            window.activateRealtimeChatChannel(openChatRoomId);
+        }
+
+        function closeDMChatWindow() { document.getElementById('dmChatInterfaceWindow').classList.add('hidden'); }
+
+        async function sendDirectChatMessage() {
+            const textInput = document.getElementById('dmMessageInputField');
+            const msg = textInput.value.trim();
+            if(!msg || !openChatRoomId) return;
+
+            const myUid = window.authInstance.currentUser.uid;
+            const myDoc = await window.getDoc(window.doc(window.dbInstance, "users", myUid));
+            const myData = myDoc.exists() ? myDoc.data() : {};
+            const myName = myData.displayName || "User";
+            const myAvatar = myData.displayAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${auth.currentUser.email}`;
+
+            const chatDocRef = window.doc(window.dbInstance, "chats", openChatRoomId);
+            const chatSnap = await window.getDoc(chatDocRef);
+            const payload = { text: msg, senderUid: myUid, senderName: myName, senderAvatar: myAvatar, timestamp: Date.now() };
+
+            if(!chatSnap.exists()) await window.setDoc(chatDocRef, { messages: [payload] });
+            else await window.updateDoc(chatDocRef, { messages: window.arrayUnion(payload) });
+            textInput.value = '';
+            textInput.focus(); // Keep focus for mobile continuous typing
+        }
+
+        // Live track preview panel controller logic
+        async function fetchAndRenderFriendTimeline(friendUid, friendName) {
+            const docSnap = await window.getDoc(window.doc(window.dbInstance, "users", friendUid));
+            const panel = document.getElementById('friendSharedPlanPanel');
+            const container = document.getElementById('friendSharedTimelineContainer');
+            
+            document.getElementById('friendSharedPlanTitle').innerText = `📋 ${friendName}'s Tracks`;
+            container.innerHTML = '';
+            panel.classList.remove('hidden');
+
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if(data.privacySetting === 'private') {
+                    container.innerHTML = `<p class="text-blue-400 text-xs italic py-6">🔒 Tracks hidden.</p>`; return;
+                }
+                const events = data.appEvents || [];
+                events.forEach(ev => {
+                    const pct = Math.min(Math.round((ev.current / ev.total) * 100), 100);
+                    container.innerHTML += `
+                        <div class="bg-blue-950 border border-blue-800 p-3 rounded-xl space-y-1.5">
+                            <div class="flex justify-between items-center text-xs">
+                                <h4 class="font-bold text-white">${ev.title}</h4>
+                                <span class="font-mono text-blue-400 font-bold">${pct}%</span>
+                            </div>
+                            <div class="w-full bg-blue-900 rounded-full h-1.5 overflow-hidden border border-blue-800">
+                                <div class="bg-blue-400 h-1.5 rounded-full" style="width: ${pct}%"></div>
+                            </div>
+                        </div>`;
+                });
+            }
+        }
+
+        function closeFriendTimelineView() { document.getElementById('friendSharedPlanPanel').classList.add('hidden'); }
+
+        async function togglePairFriendSchedule(friendUid) {
+            if (window.pairedFriendEvents && window.pairedFriendId === friendUid) {
+                window.pairedFriendEvents = null; window.pairedFriendId = null; window.pairedFriendAvatar = null;
+                window.renderMasterSuite(); return;
+            }
+            const docSnap = await window.getDoc(window.doc(window.dbInstance, "users", friendUid));
+            if (docSnap.exists()) {
+                const fData = docSnap.data();
+                window.pairedFriendEvents = fData.appEvents || [];
+                window.pairedFriendAvatar = fData.displayAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${fData.email}`;
+                window.pairedFriendId = friendUid;
+                window.renderMasterSuite();
+            }
+        }
+
+        async function triggerInspectDayDetails(isoString) {
+            const panel = document.getElementById('dayInspectionPanel');
+            const content = document.getElementById('dayInspectionContent');
+            
+            document.getElementById('dayInspectionTitle').innerHTML = `<i data-lucide="search"></i> Details for ${isoString}`;
+            content.innerHTML = '';
+            panel.classList.remove('hidden');
+
+            let myHits = window.appEvents.filter(ev => isoString >= ev.startDate && isoString <= ev.endDate);
+            content.innerHTML += `<p class="font-black text-blue-300 border-b border-blue-800 pb-0.5">Your Schedule:</p>`;
+            myHits.forEach(ev => content.innerHTML += `<p class="text-blue-100 font-bold pl-2">🎯 ${ev.title}</p>`);
+
+            if(window.pairedFriendId) {
+                const friendDoc = await window.getDoc(window.doc(window.dbInstance, "users", window.pairedFriendId));
+                const fName = friendDoc.exists() ? (friendDoc.data().displayName || "Friend") : "Friend";
+                let friendHits = (window.pairedFriendEvents || []).filter(ev => isoString >= ev.startDate && isoString <= ev.endDate);
+                
+                content.innerHTML += `<p class="font-black text-blue-400 border-b border-blue-800 pb-0.5 pt-2">${fName}'s Schedule:</p>`;
+                friendHits.forEach(ev => content.innerHTML += `<p class="text-blue-100 font-bold pl-2">🔹 ${ev.title}</p>`);
+            }
+            lucide.createIcons();
+        }
+
+        function closeDayInspector() { document.getElementById('dayInspectionPanel').classList.add('hidden'); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('googleLoginBtn').onclick = () => { window.signInWithPopup(window.authInstance, window.googleProvider).then(() => toggleAuthModal()); };
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today; document.getElementById('endDate').value = today;
+            window.renderMasterSuite();
+        });
+
+        window.renderMasterSuite = function() {
+            renderTimeline(); renderCalendarMatrix(); renderFriendsHub(); lucide.createIcons();
+        };
+
+        function toggleAuthModal() { document.getElementById('authCloudModal').classList.toggle('hidden'); }
+        function adjustMonth(dir) { currentCalendarDate.setMonth(currentCalendarDate.getMonth() + dir); window.renderMasterSuite(); }
+
+        // AVATAR PROGRESS LINES ON CALENDAR
+        function renderCalendarMatrix() {
+            const grid = document.getElementById('calendarDaysGrid');
+            grid.innerHTML = '';
+            const year = currentCalendarDate.getFullYear(); const month = currentCalendarDate.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            document.getElementById('calendarMonthTitle').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            const todayStr = new Date().toISOString().split('T')[0];
+            
+            const myAvatarSrc = document.getElementById('userDisplayAvatar').src;
+
+            for(let i = 0; i < firstDayIndex; i++) {
+                grid.innerHTML += `<div class="bg-blue-950/20 h-20 rounded-lg"></div>`;
+            }
+
+            for(let day = 1; day <= totalDays; day++) {
+                const currentCellISO = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                let isToday = (currentCellISO === todayStr);
+
+                const cell = document.createElement('div');
+                cell.className = `bg-blue-950/50 border ${isToday ? 'border-blue-500 bg-blue-900/40' : 'border-blue-800'} h-20 p-1 rounded-lg flex flex-col cursor-pointer hover:bg-blue-900 overflow-hidden`;
+                cell.setAttribute('onclick', `triggerInspectDayDetails('${currentCellISO}')`);
+                cell.innerHTML = `<span class="text-[10px] font-bold ${isToday ? 'text-blue-300' : 'text-blue-500'}">${day}</span>`;
+
+                const stackLinesContainer = document.createElement('div');
+                stackLinesContainer.className = "space-y-1 mt-1 overflow-y-auto custom-scrollbar flex-1 max-h-12 w-full pr-1";
+
+                let myHits = window.appEvents.filter(ev => currentCellISO >= ev.startDate && currentCellISO <= ev.endDate);
+                
+                // Render Personal Line with Avatar & Progress Width
+                myHits.forEach(ev => {
+                    const pct = Math.min(Math.round((ev.current / ev.total) * 100), 100) || 0;
+                    stackLinesContainer.innerHTML += `
+                        <div class="flex items-center gap-1 w-full" title="${ev.title}">
+                            <img src="${myAvatarSrc}" class="w-3.5 h-3.5 rounded-full shrink-0 border border-blue-400 object-cover">
+                            <div class="flex-1 bg-blue-950 h-1.5 rounded overflow-hidden border border-blue-800">
+                                <div class="bg-blue-500 h-full rounded" style="width: ${pct}%"></div>
+                            </div>
+                        </div>`;
+                });
+
+                // Render Friend Line with Avatar & Progress Width
+                if (window.pairedFriendEvents) {
+                    let friendHits = window.pairedFriendEvents.filter(ev => currentCellISO >= ev.startDate && currentCellISO <= ev.endDate);
+                    friendHits.forEach(ev => {
+                        const pct = Math.min(Math.round((ev.current / ev.total) * 100), 100) || 0;
+                        stackLinesContainer.innerHTML += `
+                            <div class="flex items-center gap-1 w-full" title="[Friend] ${ev.title}">
+                                <img src="${window.pairedFriendAvatar}" class="w-3.5 h-3.5 rounded-full shrink-0 border border-blue-400 object-cover">
+                                <div class="flex-1 bg-blue-950 h-1.5 rounded overflow-hidden border border-blue-800">
+                                    <div class="bg-blue-300 h-full rounded" style="width: ${pct}%"></div>
+                                </div>
+                            </div>`;
+                    });
+                }
+
+                cell.appendChild(stackLinesContainer);
+                grid.appendChild(cell);
+            }
+        }
+
+        async function renderFriendsHub() {
+            const container = document.getElementById('friendsListContainer');
+            if(window.friendsList.length === 0) { container.innerHTML = `<p class="text-blue-400 text-center text-xs italic py-2">No connected accounts.</p>`; return; }
+            container.innerHTML = '';
+            
+            for(let f of window.friendsList) {
+                const fDoc = await window.getDoc(window.doc(window.dbInstance, "users", f.uid));
+                if(fDoc.exists()) {
+                    const fData = fDoc.data();
+                    const name = fData.displayName || f.email.split('@')[0];
+                    const avatar = fData.displayAvatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${f.email}`;
+                    const isPaired = (window.pairedFriendId === f.uid);
+
+                    const div = document.createElement('div');
+                    div.className = "bg-blue-950/50 border border-blue-800 p-2.5 rounded-xl space-y-2 text-xs";
+                    div.innerHTML = `
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <img src="${avatar}" class="w-6 h-6 rounded-full bg-blue-900 object-cover border border-blue-500">
+                                <div class="truncate">
+                                    <p class="font-bold text-blue-100 truncate">${name}</p>
+                                </div>
+                            </div>
+                            <button onclick="openDirectChatWindow('${f.uid}', '${name}')" class="p-1.5 bg-blue-800 text-blue-300 hover:text-white hover:bg-blue-600 rounded-lg transition-colors cursor-pointer" title="Message"><i data-lucide="message-square" class="w-3.5 h-3.5"></i></button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <button onclick="togglePairFriendSchedule('${f.uid}')" class="w-full py-1 text-[10px] font-bold rounded-lg ${isPaired ? 'bg-blue-600 text-white' : 'bg-blue-900 text-blue-300 border border-blue-800'}">Map Matrix</button>
+                            <button onclick="fetchAndRenderFriendTimeline('${f.uid}', '${name}')" class="w-full py-1 text-[10px] bg-blue-900 border border-blue-800 font-bold text-blue-300 rounded-lg">View Tracks</button>
+                        </div>`;
+                    container.appendChild(div);
+                }
+            }
+            lucide.createIcons();
+        }
+
+        function addCustomEvent() {
+            verifySchedulerFormBounds();
+            const title = document.getElementById('eventTitle').value.trim() || "Untitled";
+            const sDate = document.getElementById('startDate').value; const eDate = document.getElementById('endDate').value;
+            const total = parseFloat(document.getElementById('metricTotal').value) || 1;
+            const current = parseFloat(document.getElementById('metricCurrent').value) || 0;
+            const catSel = document.getElementById('eventCategory').value;
+
+            window.appEvents.push({
+                id: Date.now(), title, startDate: sDate, endDate: eDate,
+                total, current: Math.min(current, total), categoryType: catSel
+            });
+            pushCloudData(); document.getElementById('eventTitle').value = '';
+        }
+
+        function cancelProgressUpdate(id) { delete stagingChanges[id]; renderTimeline(); lucide.createIcons(); }
+        function commitProgressUpdate(id) {
+            if(!(id in stagingChanges)) return;
+            const item = window.appEvents.find(e => e.id === id);
+            if(item) { item.current = stagingChanges[id]; delete stagingChanges[id]; pushCloudData(); }
+        }
+        function deleteActiveEvent(id) { window.appEvents = window.appEvents.filter(e => e.id !== id); pushCloudData(); }
+
+        function renderTimeline() {
+            const container = document.getElementById('masterTimelineContainer');
+            if(window.appEvents.length === 0) { container.innerHTML = `<p class="text-blue-400 text-center py-12 text-sm">No events found.</p>`; return; }
+            container.innerHTML = '';
+            const todayStr = new Date().toISOString().split('T')[0];
+
+            window.appEvents.forEach(ev => {
+                const targetValue = (ev.id in stagingChanges) ? stagingChanges[ev.id] : ev.current;
+                const percentage = Math.min(Math.round((targetValue / ev.total) * 100), 100);
+                const isComplete = (percentage === 100);
+                let lateHTML = (!isComplete && todayStr > ev.endDate) 
+                    ? `<span class="text-[10px] bg-blue-600 text-blue-100 font-black px-2 py-0.5 rounded border border-blue-400 animate-pulse uppercase">Delayed</span>`
+                    : `<span class="text-[10px] bg-blue-900 text-blue-300 font-bold px-2 py-0.5 rounded border border-blue-800 uppercase">Active</span>`;
+
+                const card = document.createElement('div');
+                card.className = "event-card bg-blue-950 border border-blue-800 p-4 rounded-xl flex flex-col md:flex-row gap-4 justify-between items-start md:items-center";
+                card.innerHTML = `
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-bold text-sm text-white truncate">${ev.title}</h3>
+                                ${lateHTML}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-64 space-y-2 shrink-0">
+                        <div class="flex justify-between items-center text-xs">
+                            <div class="flex items-center gap-1 text-blue-300">
+                                <input type="number" id="input-metric-${ev.id}" value="${targetValue}" min="0" max="${ev.total}" oninput="verifyTrackUpdateBounds(${ev.id}, this.value, ${ev.total})" class="w-12 bg-blue-900 border border-blue-800 rounded text-center text-white font-bold p-0.5 focus:border-blue-500 focus:outline-none">
+                                <span>/ ${ev.total}</span>
+                            </div>
+                            <span class="font-mono font-bold text-blue-400">${percentage}%</span>
+                        </div>
+                        <div class="w-full bg-blue-900 rounded-full h-2 overflow-hidden border border-blue-800">
+                            <div class="bg-blue-500 h-2 rounded-full transition-all duration-300" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="flex justify-between items-center pt-1">
+                            <div id="controls-default-${ev.id}"><button onclick="deleteActiveEvent(${ev.id})" class="text-[10px] text-blue-500 hover:text-white cursor-pointer">Drop</button></div>
+                            <div id="controls-confirm-${ev.id}" class="hidden flex gap-1.5">
+                                <button onclick="commitProgressUpdate(${ev.id})" class="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[10px] font-bold cursor-pointer">Confirm</button>
+                                <button onclick="cancelProgressUpdate(${ev.id})" class="text-blue-300 px-1.5 py-0.5 rounded text-[10px] cursor-pointer">Cancel</button>
+                            </div>
+                        </div>
+                    </div>`;
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
